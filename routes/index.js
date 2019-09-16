@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const APIhelper = require('../helpers/APIhelper');
 
 const { isNotLoggedIn, verifyToken, isAdmin } = require('../middlewares/authMiddlewares');
-const { validationLogin, validationId, validationName } = require('../middlewares/validationMiddlewares');
+const { validationLogin, validationId, validationName, validationPolicyId } = require('../middlewares/validationMiddlewares');
 
 router.get('/', (req, res, next) => {
   res.json({
@@ -52,6 +52,24 @@ router.get('/users/name', verifyToken, validationName, async (req, res) => {
   }
 });
 
+// Get the user data linked to policy
+router.get('/users/policy', verifyToken, validationPolicyId, isAdmin, async (req, res) => {
+  // Check if there is an existing token and if the logged in user is an admin
+  const { policyId } = req.body;
+
+  const policies = await APIhelper.getPolicy(policyId);
+  if (policies.length !== 0) {
+    const user = await getUserByParam('id', policies[0].clientId);
+    res.status(200).send({
+      user
+    });
+  } else {
+    res.status(404).send({
+      message: 'No policy found with this ID'
+    });
+  }
+});
+
 // Get all the policies linked to username
 router.get('/policies/:name', verifyToken, isAdmin, async (req, res) => {
   // Check if there is an existing token and if the logged in user is an admin
@@ -71,7 +89,7 @@ router.get('/policies/:name', verifyToken, isAdmin, async (req, res) => {
 });
 
 // Login
-router.post('/login', /* isNotLoggedIn, */ validationLogin, async (req, res, next) => {
+router.post('/login', isNotLoggedIn, validationLogin, async (req, res, next) => {
   // check if the email is in the data received from external API. If it is, save token in the local storage
   const { email } = req.body;
 

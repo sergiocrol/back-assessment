@@ -20,5 +20,13 @@ module.exports = {
     } catch (error) {
       console.log(error);
     }
+  },
+  getPolicy: async (policyId) => {
+    try {
+      const allPolicies = await axios.get(baseURL + '580891a4100000e8242b75c5');
+      return allPolicies.data.policies.filter(policy => policy.id === policyId);
+    } catch (error) {
+      console.log(error);
+    }
   }
 };

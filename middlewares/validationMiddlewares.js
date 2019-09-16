@@ -1,6 +1,7 @@
 'use strict';
 
-// Check if passed email field is OK
+// Check if sent data is OK
+
 const validationLogin = (req, res, next) => {
   const { email } = req.body;
 
@@ -31,8 +32,19 @@ const validationName = (req, res, next) => {
   }
 };
 
+const validationPolicyId = (req, res, next) => {
+  const { policyId } = req.body;
+
+  if (!policyId) {
+    res.status(422).send({ 'Unprocessable Entity': 'Unable to process the received data' });
+  } else {
+    next();
+  }
+};
+
 module.exports = {
   validationLogin,
   validationId,
-  validationName
+  validationName,
+  validationPolicyId
 };

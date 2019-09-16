@@ -41,11 +41,22 @@ const isAdmin = (req, res, next) => {
   });
 };
 
+// Check if the user is logged in. In that case, cannot login again
 const isNotLoggedIn = (req, res, next) => {
-  if (!req.session.currentUser) {
-    return res.redirect('/auth/login');
+  const bearerHeader = req.headers['x-access-token'] || req.headers.authorization;
+
+  if (typeof bearerHeader === 'undefined') {
+    next();
+  } else {
+    req.token = bearerHeader.split(' ')[1];
+    jwt.verify(req.token, process.env.JWT_MY_SECRET, async (error) => {
+      if (error) {
+        next();
+      } else {
+        res.status(401).send({ success: false, unauthorized: 'You are already logged in' });
+      }
+    });
   }
-  next();
 };
 
 module.exports = {
