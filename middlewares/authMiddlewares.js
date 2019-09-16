@@ -1,5 +1,7 @@
 'use strict';
 
+const jwt = require('jsonwebtoken');
+
 const isLoggedIn = (req, res, next) => {
   if (req.session.currentUser) {
     return res.redirect('/');
@@ -9,11 +11,18 @@ const isLoggedIn = (req, res, next) => {
 
 // Verify if the user is logged in
 const verifyToken = (req, res, next) => {
-  const bearerHeader = req.headers.authorization;
+  const bearerHeader = req.headers['x-access-token'] || req.headers.authorization;
+
   // Check if token has been sent
   if (typeof bearerHeader !== 'undefined') {
     req.token = bearerHeader.split(' ')[1];
-    next();
+    jwt.verify(req.token, process.env.JWT_MY_SECRET, async (error) => {
+      if (error) {
+        res.status(401).send({ success: false, unauthorized: 'You have to login to access to this info' });
+      } else {
+        next();
+      }
+    });
   } else {
     res.status(401).send({ success: false, unauthorized: 'You have to login to access to this info' });
   }
@@ -31,11 +40,11 @@ const isNotLoggedIn = (req, res, next) => {
   next();
 };
 
-const validationLoggin = (req, res, next) => {
+const validationLogin = (req, res, next) => {
   const { email } = req.body;
 
   if (!email) {
-    res.status(422).json({ '422 - Unprocessable Entity': 'Unable to process the received data' });
+    res.status(422).send({ 'Unprocessable Entity': 'Unable to process the received data' });
   } else {
     next();
   }
@@ -45,6 +54,6 @@ module.exports = {
   isLoggedIn,
   isNotLoggedIn,
   verifyToken,
-  validationLoggin,
+  validationLogin,
   isAdmin
 };
