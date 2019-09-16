@@ -14,7 +14,7 @@ router.get('/', (req, res, next) => {
     'Get users by ID': 'http://localhost:3000/api/users/id',
     'Get users by name': 'http://localhost:3000/api/users/name',
     'Get user linked to policy': 'http://localhost:3000/api/users/policy',
-    'Get policies of user': 'http://localhost:3000/api/policies'
+    'Get policies of user': 'http://localhost:3000/api/policies/:username'
   });
 });
 
@@ -23,8 +23,7 @@ router.get('/users/id', verifyToken, validationId, async (req, res) => {
   // Check if there is an existing token and get the user's data by the username passed in the body
   const { id } = req.body;
 
-  let user = await APIhelper.getUsers();
-  user = user.filter(us => us.id === id);
+  const user = await getUserByParam('id', id);
   if (user.length !== 0) {
     res.status(200).send({
       user
@@ -41,8 +40,7 @@ router.get('/users/name', verifyToken, validationName, async (req, res) => {
   // Check if there is an existing token and get user data by id passed in the body
   const { name } = req.body;
 
-  let user = await APIhelper.getUsers();
-  user = user.filter(user => user.name === name);
+  const user = await getUserByParam('name', name);
   if (user.length !== 0) {
     res.status(200).send({
       user
@@ -55,8 +53,21 @@ router.get('/users/name', verifyToken, validationName, async (req, res) => {
 });
 
 // Get all the policies linked to username
-router.get('/policies', verifyToken, isAdmin, (req, res) => {
+router.get('/policies/:name', verifyToken, isAdmin, async (req, res) => {
+  // Check if there is an existing token and if the logged in user is an admin
+  const { name } = req.params;
 
+  const user = await getUserByParam('name', name);
+  const policies = await APIhelper.getPolicies(user[0].id);
+  if (policies.length !== 0) {
+    res.status(200).send({
+      policies
+    });
+  } else {
+    res.status(404).send({
+      message: 'Not policies found for this user'
+    });
+  }
 });
 
 // Login
@@ -68,12 +79,12 @@ router.post('/login', /* isNotLoggedIn, */ validationLogin, async (req, res, nex
   user = user.filter(user => user.email === email);
 
   if (user.length !== 0) {
-    const token = jwt.sign({ email }, process.env.JWT_MY_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ user: user[0] }, process.env.JWT_MY_SECRET, { expiresIn: '24h' });
 
     res.status(200).send({
       success: true,
       message: 'Authentication successful!',
-      token
+      token: token
     });
   } else {
     res.status(400).send({
@@ -82,5 +93,11 @@ router.post('/login', /* isNotLoggedIn, */ validationLogin, async (req, res, nex
     });
   }
 });
+
+// Ger user data based on user id or name
+const getUserByParam = async (type, param) => {
+  const user = await APIhelper.getUsers();
+  return user.filter(user => user[type] === param);
+};
 
 module.exports = router;
