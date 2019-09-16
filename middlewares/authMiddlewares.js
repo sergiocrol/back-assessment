@@ -40,20 +40,9 @@ const isNotLoggedIn = (req, res, next) => {
   next();
 };
 
-const validationLogin = (req, res, next) => {
-  const { email } = req.body;
-
-  if (!email) {
-    res.status(422).send({ 'Unprocessable Entity': 'Unable to process the received data' });
-  } else {
-    next();
-  }
-};
-
 module.exports = {
   isLoggedIn,
   isNotLoggedIn,
   verifyToken,
-  validationLogin,
   isAdmin
 };

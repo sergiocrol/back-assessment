@@ -6,7 +6,8 @@ const jwt = require('jsonwebtoken');
 
 const APIhelper = require('../helpers/APIhelper');
 
-const { isNotLoggedIn, verifyToken, validationLogin, isAdmin } = require('../middlewares/authMiddlewares');
+const { isNotLoggedIn, verifyToken, isAdmin } = require('../middlewares/authMiddlewares');
+const { validationLogin, validationId, validationName } = require('../middlewares/validationMiddlewares');
 
 router.get('/', (req, res, next) => {
   res.json({
@@ -17,32 +18,48 @@ router.get('/', (req, res, next) => {
   });
 });
 
-router.get('/users/id', verifyToken, async (req, res) => {
+// Get user data by ID
+router.get('/users/id', verifyToken, validationId, async (req, res) => {
   // Check if there is an existing token and get the user's data by the username passed in the body
   const { id } = req.body;
 
   let user = await APIhelper.getUsers();
   user = user.filter(us => us.id === id);
-  res.json({
-    user
-  });
+  if (user.length !== 0) {
+    res.status(200).send({
+      user
+    });
+  } else {
+    res.status(404).send({
+      message: 'user not found'
+    });
+  }
 });
 
-router.get('/users/name', verifyToken, async (req, res) => {
+// Get user data by name
+router.get('/users/name', verifyToken, validationName, async (req, res) => {
   // Check if there is an existing token and get user data by id passed in the body
   const { name } = req.body;
 
   let user = await APIhelper.getUsers();
   user = user.filter(user => user.name === name);
-  res.json({
-    user
-  });
+  if (user.length !== 0) {
+    res.status(200).send({
+      user
+    });
+  } else {
+    res.status(404).send({
+      message: 'user not found'
+    });
+  }
 });
 
+// Get all the policies linked to username
 router.get('/policies', verifyToken, isAdmin, (req, res) => {
 
 });
 
+// Login
 router.post('/login', /* isNotLoggedIn, */ validationLogin, async (req, res, next) => {
   // check if the email is in the data received from external API. If it is, save token in the local storage
   const { email } = req.body;
