@@ -9,12 +9,14 @@ const APIhelper = require('../helpers/APIhelper');
 const { isNotLoggedIn, verifyToken, isAdmin } = require('../middlewares/authMiddlewares');
 const { validationLogin, validationId, validationName, validationPolicyId } = require('../middlewares/validationMiddlewares');
 
-router.get('/', (req, res, next) => {
+router.get('/', (req, res) => {
   res.json({
     'Get users by ID': 'http://localhost:3000/api/users/id',
     'Get users by name': 'http://localhost:3000/api/users/name',
     'Get user linked to policy': 'http://localhost:3000/api/users/policy',
-    'Get policies of user': 'http://localhost:3000/api/policies/:username'
+    'Get policies of user': 'http://localhost:3000/api/policies/:username',
+    'Log in': 'http://localhost:3000/api/login',
+    'Log out': 'http://localhost:3000/api/logout'
   });
 });
 
@@ -89,7 +91,7 @@ router.get('/policies/:name', verifyToken, isAdmin, async (req, res) => {
 });
 
 // Login
-router.post('/login', isNotLoggedIn, validationLogin, async (req, res, next) => {
+router.post('/login', isNotLoggedIn, validationLogin, async (req, res) => {
   // check if the email is in the data received from external API. If it is, save token in the local storage
   const { email } = req.body;
 
@@ -99,6 +101,7 @@ router.post('/login', isNotLoggedIn, validationLogin, async (req, res, next) => 
   if (user.length !== 0) {
     const token = jwt.sign({ user: user[0] }, process.env.JWT_MY_SECRET, { expiresIn: '24h' });
 
+    res.cookie('auth', token);
     res.status(200).send({
       success: true,
       message: 'Authentication successful!',
@@ -110,6 +113,15 @@ router.post('/login', isNotLoggedIn, validationLogin, async (req, res, next) => 
       message: 'Authentication failed! This email is not in the database'
     });
   }
+});
+
+// Logout
+router.post('/logout', verifyToken, (req, res) => {
+  res.clearCookie('auth');
+  res.status(200).send({
+    success: true,
+    message: 'User logged out'
+  });
 });
 
 // Ger user data based on user id or name

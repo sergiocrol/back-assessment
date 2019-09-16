@@ -2,16 +2,9 @@
 
 const jwt = require('jsonwebtoken');
 
-const isLoggedIn = (req, res, next) => {
-  if (req.session.currentUser) {
-    return res.redirect('/');
-  }
-  next();
-};
-
 // Verify if the user is logged in
 const verifyToken = (req, res, next) => {
-  const bearerHeader = req.headers['x-access-token'] || req.headers.authorization;
+  const bearerHeader = req.headers['x-access-token'] || req.headers.authorization || req.cookies.auth;
 
   // Check if token has been sent
   if (typeof bearerHeader !== 'undefined') {
@@ -30,7 +23,7 @@ const verifyToken = (req, res, next) => {
 
 // Verify if the user's role is admin
 const isAdmin = (req, res, next) => {
-  const bearerHeader = req.headers['x-access-token'] || req.headers.authorization;
+  const bearerHeader = req.headers['x-access-token'] || req.headers.authorization || req.cookies.auth;
   req.token = bearerHeader.split(' ')[1];
   jwt.verify(req.token, process.env.JWT_MY_SECRET, async (error, decoded) => {
     if (error) {
@@ -43,7 +36,7 @@ const isAdmin = (req, res, next) => {
 
 // Check if the user is logged in. In that case, cannot login again
 const isNotLoggedIn = (req, res, next) => {
-  const bearerHeader = req.headers['x-access-token'] || req.headers.authorization;
+  const bearerHeader = req.headers['x-access-token'] || req.headers.authorization || req.cookies.auth;
 
   if (typeof bearerHeader === 'undefined') {
     next();
@@ -60,7 +53,6 @@ const isNotLoggedIn = (req, res, next) => {
 };
 
 module.exports = {
-  isLoggedIn,
   isNotLoggedIn,
   verifyToken,
   isAdmin
