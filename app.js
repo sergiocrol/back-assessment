@@ -30,7 +30,7 @@ app.use((err, req, res, next) => {
   // render if the error ocurred before sending the response
   if (!res.headersSent) {
     const statusError = err.status || '500';
-    res.status(statusError).json(err);
+    res.status(statusError).send(err);
   }
 });
 
