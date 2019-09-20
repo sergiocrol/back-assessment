@@ -22,7 +22,7 @@ router.get('/', (req, res) => {
 
 // Get user data by ID
 router.get('/users/id', verifyToken, validationId, async (req, res) => {
-  // Check if there is an existing token and get the user's data by the username passed in the body
+  // Check if there is an existing token and get the user's data by the id passed in the body
   const { id } = req.body;
 
   const user = await getUserByParam('id', id);
@@ -39,7 +39,7 @@ router.get('/users/id', verifyToken, validationId, async (req, res) => {
 
 // Get user data by name
 router.get('/users/name', verifyToken, validationName, async (req, res) => {
-  // Check if there is an existing token and get user data by id passed in the body
+  // Check if there is an existing token and get user data by username passed in the body
   const { name } = req.body;
 
   const user = await getUserByParam('name', name);
